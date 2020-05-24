@@ -1,4 +1,3 @@
-#@@ -0,0 +1,37 @@
 # -*- coding: utf-8 -*-
 
 """Utilities for webotron."""

@@ -1,33 +1,20 @@
-
 # -*- coding: utf-8 -*-
 
 """Classes for S3 Buckets."""
 
-import mimetypes
 from pathlib import Path
+import mimetypes
+
 from botocore.exceptions import ClientError
-import util
+
 
 class BucketManager:
     """Manage an S3 Bucket."""
 
     def __init__(self, session):
         """Create a BucketManager object."""
-        self.s3 = session.resource('s3')
-
-    def get_region_name(self, bucket):
-        """Get the bucket's region name."""
-        client = self.s3.meta.client
-        bucket_location = client.get_bucket_location(Bucket=bucket.name)
-
-        return bucket_location["LocationConstraint"] or 'us-east-1'
-
-    def get_bucket_url(self, bucket):
-        """Get the website URL for this bucket."""
-        return "http://{}.{}".format(
-            bucket.name,
-            util.get_endpoint(self.get_region_name(bucket)).host)
-
+        self.session = session
+        self.s3 = self.session.resource('s3')
 
     def all_buckets(self):
         """Get an iterator for all buckets."""
@@ -75,13 +62,13 @@ class BucketManager:
     def configure_website(self, bucket):
         """Configure s3 website hosting for bucket."""
         bucket.Website().put(WebsiteConfiguration={
-                'ErrorDocument': {
-                    'Key': 'error.html'
-                },
-                'IndexDocument': {
-                    'Suffix': 'index.html'
-                }
-            })
+            'ErrorDocument': {
+                'Key': 'error.html'
+            },
+            'IndexDocument': {
+                'Suffix': 'index.html'
+            }
+        })
 
     @staticmethod
     def upload_file(bucket, path, key):
@@ -101,12 +88,11 @@ class BucketManager:
 
         root = Path(pathname).expanduser().resolve()
 
-        def handle_directory(target):
-            for p in target.iterdir():
-                if p.is_dir():
-                    handle_directory(p)
-                if p.is_file():
-                    self.upload_file(
-                        bucket, str(p), str(p.relative_to(root).as_posix()))
+    def handle_directory(target):
+        for p in target.iterdir():
+            if p.is_dir():
+                handle_directory(p)
+            if p.is_file():
+                self.upload_file(s3_bucket, str(p), str(p.relative_to(root).as_posix()))
 
         handle_directory(root)
