@@ -12,6 +12,7 @@ Webotron automates the process of deploying static websites to AWS.
 - Configure a Content Delivery Network and SSL with AWS CloudFront
 """
 
+
 import boto3
 import click
 
@@ -25,10 +26,12 @@ domain_manager = None
 
 
 @click.group()
-@click.option('--profile', default=None, help="Use a given AWS profile.")
+@click.option('--profile', default=None,
+              help="Use a given AWS profile.")
 def cli(profile):
     """Webotron deploys websites to AWS."""
     global session, bucket_manager, domain_manager
+
     session_cfg = {}
     if profile:
         session_cfg['profile_name'] = profile
@@ -76,16 +79,15 @@ def sync(pathname, bucket):
 @cli.command('setup-domain')
 @click.argument('domain')
 def setup_domain(domain):
-    """Configure DOMAIN to point to bucket."""
+    """Configure DOMAIN to point to BUCKET."""
     bucket = bucket_manager.get_bucket(domain)
 
     zone = domain_manager.find_hosted_zone(domain) \
         or domain_manager.create_hosted_zone(domain)
 
     endpoint = util.get_endpoint(bucket_manager.get_region_name(bucket))
-    a_record = domain_manager.create_s3_domain_record(zone, domain, endpoint)
+    domain_manager.create_s3_domain_record(zone, domain, endpoint)
     print("Domain configure: http://{}".format(domain))
-    
 
 
 if __name__ == '__main__':

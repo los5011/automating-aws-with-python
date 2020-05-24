@@ -137,7 +137,6 @@ class BucketManager:
             hash = self.hash_data(reduce(lambda x, y: x + y, digests))
             return '"{}-{}"'.format(hash.hexdigest(), len(hashes))
 
-    @staticmethod
     def upload_file(self, bucket, path, key):
         """Upload path to s3_bucket at key."""
         content_type = mimetypes.guess_type(key)[0] or 'text/plain'
@@ -162,11 +161,10 @@ class BucketManager:
 
         root = Path(pathname).expanduser().resolve()
 
-    def handle_directory(target):
-        for p in target.iterdir():
-            if p.is_dir():
-                handle_directory(p)
-            if p.is_file():
-                self.upload_file(s3_bucket, str(p), str(p.relative_to(root).as_posix()))
-
+        def handle_directory(target):
+            for p in target.iterdir():
+                if p.is_dir():
+                    handle_directory(p)
+                if p.is_file():
+                    self.upload_file(bucket, str(p), str(p.relative_to(root).as_posix()))
         handle_directory(root)
